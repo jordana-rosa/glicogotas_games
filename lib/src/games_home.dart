@@ -55,7 +55,7 @@ class _GameTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(19), onTap: action,
       child: Padding(padding: const EdgeInsets.all(10), child: Column(children: [
         AspectRatio(aspectRatio: 1, child: image == null
-          ? Icon(Icons.extension_rounded, size: 58, color: foreground.withOpacity(.65))
+          ? Icon(Icons.extension_rounded, size: 58, color: foreground.withValues(alpha: 0.65))
           : Image.asset(image!, package: 'glicogotas_games', fit: BoxFit.contain)),
         const SizedBox(height: 8),
         Text(title, textAlign: TextAlign.center, style: TextStyle(

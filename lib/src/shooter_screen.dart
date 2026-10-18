@@ -75,12 +75,12 @@ class _LitaShooterScreenState extends State<LitaShooterScreen> with WidgetsBindi
           final rules = game.rules;
           return Column(children: [
             Row(children: [
-              Material(color: Colors.white.withOpacity(.94), borderRadius: BorderRadius.circular(13), child: Padding(
+              Material(color: Colors.white.withValues(alpha: 0.94), borderRadius: BorderRadius.circular(13), child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Text('♥ ' * rules.lives + '♡ ' * (3-rules.lives), style: const TextStyle(fontSize: 21, color: Color(0xFFEF447B), fontWeight: FontWeight.bold)),
               )),
               const Spacer(),
-              Material(color: Colors.white.withOpacity(.94), borderRadius: BorderRadius.circular(13), child: Padding(
+              Material(color: Colors.white.withValues(alpha: 0.94), borderRadius: BorderRadius.circular(13), child: Padding(
                 padding: const EdgeInsets.all(10), child: Text('Pontos ${rules.score}  •  Recorde $record', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               )),
               IconButton.filledTonal(tooltip: 'Pausar ou continuar', onPressed: () => setState(() => game.setPaused(!game.pausedByUser)), icon: Icon(game.pausedByUser ? Icons.play_arrow : Icons.pause)),

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'dart:ui' as ui;
 import 'package:flame/cache.dart';
 import 'package:flame/components.dart';
@@ -238,7 +237,7 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
 
   @override
   void render(Canvas canvas) {
-    final bg = Paint()..color = const Color(0xFFC7EFF8).withOpacity(.6);
+    final bg = Paint()..color = const Color(0xFFC7EFF8).withValues(alpha: 0.6);
     for (var i = 0; i < 14; i++) {
       final x = ((i * 107.0 - sceneOffset * (i.isEven ? 1 : .65)) % (size.x + 180) + size.x + 180) % (size.x + 180);
       final y = 65.0 + (i * 83.0) % math.max(70, size.y - 100);
@@ -267,7 +266,11 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       }
       final p = Paint()..color = c;
       canvas.drawCircle(Offset(t.x, t.y), t.radius, p);
-      canvas.drawCircle(Offset(t.x - t.radius * .2, t.y - t.radius * .2), t.radius * .48, Paint()..color = Colors.white.withOpacity(.45));
+      canvas.drawCircle(
+  Offset(t.x - t.radius * .2, t.y - t.radius * .2),
+  t.radius * .48,
+  Paint()..color = Colors.white.withValues(alpha: 0.45),
+);
       if (t.type == ThingType.apple) canvas.drawLine(Offset(t.x, t.y - 14), Offset(t.x+7, t.y-24), Paint()..color = Colors.green..strokeWidth = 4);
       if (t.type == ThingType.heart) _drawLabel(canvas, '+', t.x - 7, t.y - 12, 28);
       if (t.type == ThingType.bobo) _drawLabel(canvas, 'B', t.x-10, t.y-17, 27);
