@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flame/cache.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -27,7 +28,7 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
   final Images packageImages = Images(prefix: 'packages/glicogotas_games/assets/images/');
   SpriteComponent? lita;
   SpriteComponent? confused;
-  final Map<ThingType, Image> entityImages = {};
+  final Map<ThingType, ui.Image> entityImages = {};
   double playerX = 35, playerY = 160;
   double spawnClock = 0, fireClock = 0, appleClock = 0, healClock = 0, bossClock = 0;
   double sceneOffset = 0;
