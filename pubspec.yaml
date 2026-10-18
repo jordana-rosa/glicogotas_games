@@ -1,0 +1,25 @@
+name: glicogotas_games
+description: Minigames independentes do universo Glicogotas.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.20.0
+  shared_preferences: ^2.3.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/lita_voando.png
+    - assets/images/lita_bobo.png
+    - assets/images/lita_canetto_original.png
+    - assets/images/bobo.png
+    - assets/images/rei_hiper.png
+    - assets/images/vida_extra.png
+    - assets/images/novo_recorde.png
