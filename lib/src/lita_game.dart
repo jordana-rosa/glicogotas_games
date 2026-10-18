@@ -32,11 +32,13 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
   double spawnClock = 0, fireClock = 0, appleClock = 0, healClock = 0, bossClock = 0;
   double sceneOffset = 0;
   double bossHpFraction = 0;
+  double bossIntroRemaining = 0;
+  static const double bossIntroDuration = 3.2;
   int bossHp = 0, bossMaxHp = 0;
   bool pausedByUser = false;
   bool soundEnabled = true; // Preparado para futura ligação ao sistema de áudio.
   bool notifiedEnd = false;
-  int nextBossAt = 2500;
+  int nextBossAt = 500; // Primeiro chefe aparece cedo; depois a cada 3500 pontos.
   int lastDisplayScore = -1, lastDisplayLives = -1;
 
   double get playerWidth => math.min(155, size.x * 0.28);
@@ -97,7 +99,8 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
     spawnClock = fireClock = appleClock = healClock = bossClock = sceneOffset = 0;
     bossHp = bossMaxHp = 0;
     bossHpFraction = 0;
-    nextBossAt = 2500;
+    bossIntroRemaining = 0;
+    nextBossAt = 500;
     pausedByUser = false;
     notifiedEnd = false;
     changed();
@@ -117,7 +120,10 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       case ThingType.boss:
         bossMaxHp = 28 + rules.bossesDefeated * 12;
         bossHp = bossMaxHp;
-        things.add(Thing(type, size.x + 40, size.y / 2, 42, -55, hp: bossHp));
+        bossHpFraction = 1;
+        bossIntroRemaining = bossIntroDuration;
+        // O chefe entra pela direita e permanece na arena até ser derrotado.
+        things.add(Thing(type, size.x + 90, size.y / 2, 52, -55, hp: bossHp));
       case ThingType.bullet:
       case ThingType.enemyBullet:
         break;
@@ -142,6 +148,9 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
     super.update(dt);
     if (pausedByUser || rules.isOver || size.x == 0 || size.y == 0) return;
     dt = dt.clamp(0.0, 0.05).toDouble();
+    if (bossIntroRemaining > 0) {
+      bossIntroRemaining = math.max(0, bossIntroRemaining - dt);
+    }
     rules.advance(dt);
     sceneOffset += dt * (35 + rules.difficulty * 12);
     fireClock += dt;
@@ -169,7 +178,7 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       bossClock = 0;
     }
     final boss = things.where((t) => t.type == ThingType.boss).toList();
-    if (boss.isNotEmpty && bossClock >= 1.5) {
+    if (boss.isNotEmpty && bossIntroRemaining <= 0 && bossClock >= 1.5) {
       bossClock = 0;
       things.add(Thing(ThingType.enemyBullet, boss.first.x - 40, boss.first.y, 10, -220, vy: (hitY - boss.first.y) * .2));
     }
@@ -178,6 +187,13 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       t.age += dt;
       t.x += t.vx * dt;
       t.y += t.vy * dt;
+      if (t.type == ThingType.boss) {
+        final bossTargetX = size.x * 0.76;
+        if (t.x <= bossTargetX) {
+          t.x = bossTargetX;
+          t.vx = 0;
+        }
+      }
       if (t.type == ThingType.bobo || t.type == ThingType.boss) t.y += math.sin(t.age * 3) * 22 * dt;
       if (t.x < -80 || t.x > size.x + 130 || t.y < -40 || t.y > size.y + 40) remove.add(t);
       if (t.type == ThingType.bullet) continue;
@@ -256,12 +272,36 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       }
       final art = entityImages[t.type];
       if (art != null) {
-        final width = t.radius * (t.type == ThingType.boss ? 3.0 : 2.6);
-        final height = t.radius * (t.type == ThingType.heart ? 2.2 : 2.6);
-        canvas.drawImageRect(art,
+        // Preserva a proporção das artes para não esticar os personagens.
+        final aspectRatio = art.width / art.height;
+        double height;
+        double maxWidth;
+        switch (t.type) {
+          case ThingType.boss:
+            height = size.y * 0.76;
+            maxWidth = size.x * 0.43;
+          case ThingType.bobo:
+            height = t.radius * 3.4;
+            maxWidth = t.radius * 4.4;
+          case ThingType.heart:
+            height = t.radius * 2.4;
+            maxWidth = t.radius * 3.0;
+          default:
+            height = t.radius * 2.8;
+            maxWidth = t.radius * 3.4;
+        }
+        final width = math.min(height * aspectRatio, maxWidth);
+        height = width / aspectRatio;
+        canvas.drawImageRect(
+          art,
           Rect.fromLTWH(0, 0, art.width.toDouble(), art.height.toDouble()),
-          Rect.fromCenter(center: Offset(t.x, t.y), width: width, height: height),
-          Paint()..filterQuality = FilterQuality.medium);
+          Rect.fromCenter(
+            center: Offset(t.x, t.y),
+            width: width,
+            height: height,
+          ),
+          Paint()..filterQuality = FilterQuality.high,
+        );
         continue;
       }
       final p = Paint()..color = c;
@@ -277,6 +317,69 @@ class LitaGame extends FlameGame with DragCallbacks, TapCallbacks {
       if (t.type == ThingType.boss) _drawLabel(canvas, 'R', t.x-19, t.y-30, 54);
     }
     super.render(canvas);
+    _renderBossEntrance(canvas);
+  }
+
+  /// Alerta visual sobre o jogo nos primeiros segundos de cada chefe.
+  void _renderBossEntrance(Canvas canvas) {
+    if (bossIntroRemaining <= 0 || bossHp <= 0) return;
+    final elapsed = bossIntroDuration - bossIntroRemaining;
+    final alpha = math.min(1.0, math.min(elapsed / .32, bossIntroRemaining / .55));
+    final pulse = .5 + .5 * math.sin(elapsed * 10);
+    final w = size.x;
+    final h = size.y;
+
+    // Flash discreto e faixas dramáticas; o jogo permanece visível.
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()..color = const Color(0xFF3B146A).withValues(alpha: .11 * alpha * pulse),
+    );
+    final banner = Rect.fromCenter(
+      center: Offset(w * .5, h * .35),
+      width: math.min(w * .81, 650),
+      height: math.min(h * .36, 115),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(banner, const Radius.circular(23)),
+      Paint()..color = const Color(0xFF38115E).withValues(alpha: .91 * alpha),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(banner.deflate(3), const Radius.circular(20)),
+      Paint()
+        ..color = const Color(0xFFFFCE43).withValues(alpha: alpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+    final titleFont = math.min(32.0, math.max(15.0, w * .05));
+    final title = TextPainter(
+      text: TextSpan(
+        text: 'O REI DA HIPER CHEGOU!',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: alpha),
+          fontSize: titleFont,
+          fontWeight: FontWeight.w900,
+          shadows: const [Shadow(color: Color(0xFFAA54F5), blurRadius: 8)],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+    )..layout(maxWidth: banner.width - 20);
+    title.paint(canvas, Offset(w * .5 - title.width / 2, banner.center.dy - title.height * .75));
+
+    final subtitle = TextPainter(
+      text: TextSpan(
+        text: 'PREPARE O CANETTO!',
+        style: TextStyle(
+          color: const Color(0xFFFFDC61).withValues(alpha: alpha),
+          fontSize: math.min(17.0, math.max(11.0, w * .026)),
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: banner.width - 20);
+    subtitle.paint(canvas, Offset(w * .5 - subtitle.width / 2, banner.center.dy + title.height * .15));
   }
 
   void _drawLabel(Canvas canvas, String label, double x, double y, double fontSize) {

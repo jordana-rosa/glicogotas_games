@@ -75,20 +75,50 @@ class _LitaShooterScreenState extends State<LitaShooterScreen> with WidgetsBindi
           final rules = game.rules;
           return Column(children: [
             Row(children: [
-              Material(color: Colors.white.withValues(alpha: 0.94), borderRadius: BorderRadius.circular(13), child: Padding(
+              Material(color: Colors.white.withValues(alpha: .94), borderRadius: BorderRadius.circular(13), child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Text('♥ ' * rules.lives + '♡ ' * (3-rules.lives), style: const TextStyle(fontSize: 21, color: Color(0xFFEF447B), fontWeight: FontWeight.bold)),
               )),
               const Spacer(),
-              Material(color: Colors.white.withValues(alpha: 0.94), borderRadius: BorderRadius.circular(13), child: Padding(
+              Material(color: Colors.white.withValues(alpha: .94), borderRadius: BorderRadius.circular(13), child: Padding(
                 padding: const EdgeInsets.all(10), child: Text('Pontos ${rules.score}  •  Recorde $record', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               )),
               IconButton.filledTonal(tooltip: 'Pausar ou continuar', onPressed: () => setState(() => game.setPaused(!game.pausedByUser)), icon: Icon(game.pausedByUser ? Icons.play_arrow : Icons.pause)),
             ]),
-            if (game.bossHp > 0) Padding(padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 55), child: Column(children: [
-              const Text('REI DA HIPER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
-              LinearProgressIndicator(value: game.bossHpFraction, minHeight: 9, backgroundColor: Colors.white, color: const Color(0xFF9253CB)),
-            ])),
+            if (game.bossHp > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 7, left: 48, right: 48),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF32144F).withValues(alpha: .92),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFFCE43), width: 2),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '👑 REI DA HIPER 👑',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: LinearProgressIndicator(
+                          value: game.bossHpFraction.clamp(0.0, 1.0),
+                          minHeight: 13,
+                          backgroundColor: const Color(0xFFB6A2C6),
+                          color: const Color(0xFFFF5EAA),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (rules.isPowerActive) const Text('★ CANETTO TURBINADO ★', style: TextStyle(color: Color(0xFFA85820), fontWeight: FontWeight.bold)),
             if (rules.isSlowed) const Text('LENTIDÃO: desvie do Bobo!', style: TextStyle(color: Color(0xFFBD1C4F), fontWeight: FontWeight.bold)),
           ]);
